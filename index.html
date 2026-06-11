@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ベトナム会話アプリ｜Alliance for the Blue</title>
+<style>
+  :root{
+    --blue:#0a7ea4; --blue-d:#06607d; --teal:#13b6b0; --bg:#f3f8fb;
+    --card:#ffffff; --ink:#16303b; --sub:#5d7782; --line:#dfeaf0;
+    --accent:#ffb703; --vn:#d62828; --shadow:0 4px 14px rgba(10,126,164,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,system-ui,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.5;
+    padding-bottom:78px;
+  }
+  header{
+    background:linear-gradient(135deg,var(--blue),var(--teal));
+    color:#fff; padding:16px 16px 14px; position:sticky; top:0; z-index:20;
+    box-shadow:0 2px 10px rgba(0,0,0,.12);
+  }
+  header h1{margin:0; font-size:18px; font-weight:700; letter-spacing:.02em}
+  header p{margin:3px 0 0; font-size:12px; opacity:.92}
+  .wrap{max-width:680px; margin:0 auto; padding:14px}
+
+  nav.tabbar{
+    position:fixed; bottom:0; left:0; right:0; z-index:30;
+    background:#fff; border-top:1px solid var(--line);
+    display:flex; box-shadow:0 -2px 10px rgba(0,0,0,.06);
+  }
+  nav.tabbar button{
+    flex:1; border:none; background:none; padding:9px 4px 8px;
+    font-size:11px; color:var(--sub); display:flex; flex-direction:column;
+    align-items:center; gap:3px; cursor:pointer; font-family:inherit;
+  }
+  nav.tabbar button .ic{font-size:20px; line-height:1}
+  nav.tabbar button.active{color:var(--blue); font-weight:700}
+  .page{display:none}
+  .page.active{display:block}
+
+  .chips{display:flex; gap:8px; overflow-x:auto; padding:2px 0 10px; -webkit-overflow-scrolling:touch}
+  .chips button{
+    white-space:nowrap; border:1px solid var(--line); background:#fff;
+    color:var(--sub); padding:7px 14px; border-radius:999px; font-size:13px;
+    cursor:pointer; font-family:inherit; flex:0 0 auto;
+  }
+  .chips button.active{background:var(--blue); color:#fff; border-color:var(--blue); font-weight:700}
+
+  .search{
+    width:100%; padding:11px 14px; border:1px solid var(--line); border-radius:12px;
+    font-size:15px; margin-bottom:12px; font-family:inherit; background:#fff;
+  }
+  .search:focus{outline:2px solid var(--teal); border-color:var(--teal)}
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:13px 14px; margin-bottom:10px; box-shadow:var(--shadow);
+    display:flex; align-items:center; gap:12px; cursor:pointer; transition:transform .08s;
+  }
+  .card:active{transform:scale(.99)}
+  .card .txt{flex:1; min-width:0}
+  .card .ja{font-size:15px; font-weight:700; color:var(--ink)}
+  .card .vn{font-size:16px; color:var(--vn); font-weight:700; margin-top:2px}
+  .card .kana{font-size:12px; color:var(--sub); margin-top:1px}
+  .play{
+    flex:0 0 auto; width:44px; height:44px; border-radius:50%;
+    background:linear-gradient(135deg,var(--blue),var(--teal)); color:#fff;
+    border:none; font-size:20px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; box-shadow:0 2px 6px rgba(10,126,164,.35);
+  }
+  .play:active{transform:scale(.92)}
+  .play.loading{opacity:.6}
+  .cat-label{font-size:13px; font-weight:700; color:var(--blue); margin:14px 2px 8px; display:flex; align-items:center; gap:6px}
+  .cat-label:first-child{margin-top:2px}
+
+  .rp-select{display:grid; gap:10px}
+  .rp-scene{
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px;
+    box-shadow:var(--shadow); cursor:pointer; display:flex; align-items:center; gap:12px;
+  }
+  .rp-scene .emo{font-size:30px}
+  .rp-scene h3{margin:0; font-size:15px}
+  .rp-scene p{margin:2px 0 0; font-size:12px; color:var(--sub)}
+  .rp-back{background:none;border:none;color:var(--blue);font-size:14px;cursor:pointer;font-family:inherit;padding:4px 0;margin-bottom:6px;font-weight:700}
+  .bubble{margin-bottom:12px; max-width:88%; clear:both}
+  .bubble .role{font-size:11px; color:var(--sub); margin-bottom:3px}
+  .bubble .box{padding:11px 13px; border-radius:14px; position:relative; cursor:pointer}
+  .bubble.them{float:left}
+  .bubble.them .box{background:#fff; border:1px solid var(--line); border-bottom-left-radius:4px}
+  .bubble.me{float:right; text-align:right}
+  .bubble.me .role{text-align:right}
+  .bubble.me .box{background:linear-gradient(135deg,var(--blue),var(--teal)); color:#fff; border-bottom-right-radius:4px; text-align:left; display:inline-block}
+  .bubble .vn2{font-size:16px; font-weight:700}
+  .bubble.them .vn2{color:var(--vn)}
+  .bubble .kana2{font-size:11px; opacity:.85; margin-top:2px}
+  .bubble .ja2{font-size:12px; opacity:.9; margin-top:3px}
+  .bubble .mini{margin-top:6px; background:rgba(255,255,255,.25); border:none; border-radius:8px; padding:4px 10px; font-size:12px; cursor:pointer; color:inherit; font-family:inherit}
+  .bubble.them .mini{background:#eef5f8; color:var(--blue)}
+  .clearfix::after{content:"";display:table;clear:both}
+
+  .tr-card{background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:var(--shadow); margin-bottom:14px}
+  .dir{display:flex; align-items:center; gap:10px; margin-bottom:12px; justify-content:center}
+  .dir .lang{font-weight:700; font-size:14px; padding:6px 14px; border-radius:10px; background:#eef5f8; color:var(--blue); min-width:96px; text-align:center}
+  .swap{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:18px;cursor:pointer;color:var(--blue)}
+  textarea.tr-in{width:100%; min-height:84px; border:1px solid var(--line); border-radius:12px; padding:12px; font-size:16px; font-family:inherit; resize:vertical}
+  textarea.tr-in:focus{outline:2px solid var(--teal); border-color:var(--teal)}
+  .tr-actions{display:flex; gap:10px; margin-top:10px}
+  .btn{flex:1; padding:12px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:7px}
+  .btn-mic{background:#fff; border:1px solid var(--blue); color:var(--blue)}
+  .btn-mic.rec{background:var(--vn); color:#fff; border-color:var(--vn); animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+  .btn-go{background:linear-gradient(135deg,var(--blue),var(--teal)); color:#fff}
+  .tr-out{margin-top:14px; background:#f0f8fb; border:1px solid var(--line); border-radius:12px; padding:14px; min-height:60px}
+  .tr-out .res{font-size:18px; font-weight:700; color:var(--ink); word-break:break-word}
+  .tr-out .resvn{color:var(--vn)}
+  .tr-out .hint{color:var(--sub); font-size:13px}
+  .tr-out .outbtns{margin-top:10px; display:flex; gap:8px}
+  .tr-out .outbtns button{background:#fff; border:1px solid var(--line); border-radius:9px; padding:7px 12px; font-size:13px; cursor:pointer; color:var(--blue); font-family:inherit}
+  .note{font-size:11px; color:var(--sub); text-align:center; margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌏 ベトナム会話アプリ</h1>
+  <p>Alliance for the Blue ｜ 工場訪問・自己紹介・懇親会サポート</p>
+</header>
+
+<div class="page active" id="page-phrases">
+  <div class="wrap">
+    <input class="search" id="search" placeholder="🔍 日本語・ベトナム語で検索…">
+    <div class="chips" id="chips"></div>
+    <div id="phraseList"></div>
+  </div>
+</div>
+
+<div class="page" id="page-roleplay">
+  <div class="wrap">
+    <div id="rpSelect" class="rp-select"></div>
+    <div id="rpPlay" style="display:none"></div>
+  </div>
+</div>
+
+<div class="page" id="page-translate">
+  <div class="wrap">
+    <div class="tr-card">
+      <div class="dir">
+        <span class="lang" id="langFrom">日本語</span>
+        <button class="swap" id="swapBtn" title="入れ替え">⇄</button>
+        <span class="lang" id="langTo">ベトナム語</span>
+      </div>
+      <textarea class="tr-in" id="trInput" placeholder="ここに入力、または🎤で話してください"></textarea>
+      <div class="tr-actions">
+        <button class="btn btn-mic" id="micBtn">🎤 音声入力</button>
+        <button class="btn btn-go" id="goBtn">翻訳する →</button>
+      </div>
+      <div class="tr-out" id="trOut">
+        <span class="hint">翻訳結果がここに表示されます。</span>
+      </div>
+      <div class="note">※ 翻訳は無料の自動翻訳サービスを利用。重要な場面では参考としてご利用ください。</div>
+    </div>
+  </div>
+</div>
+
+<nav class="tabbar">
+  <button class="active" data-page="phrases"><span class="ic">💬</span>フレーズ集</button>
+  <button data-page="roleplay"><span class="ic">🎭</span>ロールプレイ</button>
+  <button data-page="translate"><span class="ic">🔄</span>翻訳</button>
+</nav>
+
+<script>
+/* =========================================================
+   40 フレーズ データ
+   ========================================================= */
+const PHRASES = [
+  {cat:"自己紹介", ja:"こんにちは", vn:"Xin chào", kana:"シン チャオ"},
+  {cat:"自己紹介", ja:"はじめまして", vn:"Rất vui được gặp bạn", kana:"ザッ ヴイ ドゥオッ ガップ バン"},
+  {cat:"自己紹介", ja:"私の名前は野村です", vn:"Tôi tên là Nomura", kana:"トイ テン ラー ノムラ"},
+  {cat:"自己紹介", ja:"日本から来ました", vn:"Tôi đến từ Nhật Bản", kana:"トイ デン トゥ ニャッ バン"},
+  {cat:"自己紹介", ja:"私はAlliance for the Blueの代表です", vn:"Tôi là đại diện của Alliance for the Blue", kana:"トイ ラー ダイ ジエン クア…"},
+  {cat:"自己紹介", ja:"よろしくお願いします", vn:"Rất mong được hợp tác", kana:"ザッ モン ドゥオッ ホップ タッ"},
+  {cat:"自己紹介", ja:"お会いできて光栄です", vn:"Rất hân hạnh được gặp", kana:"ザッ ハン ハイン ドゥオッ ガップ"},
+  {cat:"自己紹介", ja:"これは私の名刺です", vn:"Đây là danh thiếp của tôi", kana:"ダイ ラー ザイン ティエップ クア トイ"},
+  {cat:"自己紹介", ja:"お元気ですか？", vn:"Bạn khỏe không?", kana:"バン クェ コン"},
+  {cat:"自己紹介", ja:"元気です、ありがとう", vn:"Tôi khỏe, cảm ơn", kana:"トイ クェ、カム オン"},
+
+  {cat:"食事", ja:"さあ、食べましょう", vn:"Chúng ta ăn thôi", kana:"チュン タ アン トイ"},
+  {cat:"食事", ja:"とても美味しいです", vn:"Rất ngon", kana:"ザッ ンゴン"},
+  {cat:"食事", ja:"これは何ですか？", vn:"Đây là món gì?", kana:"ダイ ラー モン ジー"},
+  {cat:"食事", ja:"これをください", vn:"Cho tôi cái này", kana:"チョ トイ カイ ナイ"},
+  {cat:"食事", ja:"お腹がいっぱいです", vn:"Tôi no rồi", kana:"トイ ノー ゾイ"},
+  {cat:"食事", ja:"お水をください", vn:"Cho tôi xin nước", kana:"チョ トイ シン ヌオッ"},
+  {cat:"食事", ja:"辛いですか？", vn:"Có cay không?", kana:"コー カイ コン"},
+  {cat:"食事", ja:"辛くしないでください", vn:"Đừng làm cay nhé", kana:"ドゥン ラム カイ ニェ"},
+  {cat:"食事", ja:"パクチーは苦手です", vn:"Tôi không ăn được rau mùi", kana:"トイ コン アン ドゥオッ ザウ ムイ"},
+  {cat:"食事", ja:"もう少しください", vn:"Cho tôi thêm một chút", kana:"チョ トイ テム モッ チュッ"},
+  {cat:"食事", ja:"とても美味しかったです", vn:"Món ăn rất ngon", kana:"モン アン ザッ ンゴン"},
+  {cat:"食事", ja:"ごちそうさまでした", vn:"Cảm ơn vì bữa ăn", kana:"カム オン ヴィ ブア アン"},
+
+  {cat:"懇親会", ja:"乾杯！", vn:"Một hai ba, dô!", kana:"モッ ハイ バー、ヨー！"},
+  {cat:"懇親会", ja:"健康に乾杯", vn:"Chúc sức khỏe", kana:"チュッ スッ クェ"},
+  {cat:"懇親会", ja:"お酒は少しだけにします", vn:"Tôi uống một chút thôi", kana:"トイ ウオン モッ チュッ トイ"},
+  {cat:"懇親会", ja:"お酒は飲めません", vn:"Tôi không uống được rượu", kana:"トイ コン ウオン ドゥオッ ズオウ"},
+  {cat:"懇親会", ja:"とても楽しいです", vn:"Vui quá", kana:"ヴイ クア"},
+  {cat:"懇親会", ja:"一緒に写真を撮りましょう", vn:"Chụp ảnh cùng nhau nhé", kana:"チュップ アイン クン ニャウ ニェ"},
+  {cat:"懇親会", ja:"素晴らしい工場ですね", vn:"Nhà máy thật tuyệt vời", kana:"ニャー マイ タッ トゥエッ ヴオイ"},
+  {cat:"懇親会", ja:"ご協力に感謝します", vn:"Cảm ơn sự hợp tác", kana:"カム オン ス ホップ タッ"},
+  {cat:"懇親会", ja:"また会いましょう", vn:"Hẹn gặp lại", kana:"ヘン ガップ ライ"},
+  {cat:"懇親会", ja:"さようなら", vn:"Tạm biệt", kana:"タム ビエッ"},
+
+  {cat:"便利", ja:"ありがとうございます", vn:"Cảm ơn", kana:"カム オン"},
+  {cat:"便利", ja:"どういたしまして", vn:"Không có gì", kana:"コン コー ジー"},
+  {cat:"便利", ja:"すみません / 失礼します", vn:"Xin lỗi", kana:"シン ロイ"},
+  {cat:"便利", ja:"大丈夫です", vn:"Không sao", kana:"コン サオ"},
+  {cat:"便利", ja:"わかりました", vn:"Tôi hiểu rồi", kana:"トイ ヒエウ ゾイ"},
+  {cat:"便利", ja:"ゆっくり話してください", vn:"Xin nói chậm hơn", kana:"シン ノイ チャム ホン"},
+  {cat:"便利", ja:"海を守りましょう", vn:"Hãy bảo vệ biển", kana:"ハイ バオ ヴェ ビエン"},
+  {cat:"便利", ja:"これからもよろしく", vn:"Mong tiếp tục hợp tác", kana:"モン ティエップ トゥッ ホップ タッ"},
+];
+
+const CATS = ["すべて","自己紹介","食事","懇親会","便利"];
+
+const SCENES = [
+  {
+    emo:"🤝", title:"工場到着・自己紹介",
+    desc:"工場のスタッフと初対面のあいさつ",
+    lines:[
+      {role:"them", vn:"Xin chào! Chào mừng đến nhà máy.", kana:"シン チャオ！チャオ ムン デン ニャー マイ", ja:"こんにちは！工場へようこそ。"},
+      {role:"me",   vn:"Xin chào, rất vui được gặp bạn.", kana:"シン チャオ、ザッ ヴイ ドゥオッ ガップ バン", ja:"こんにちは、お会いできて嬉しいです。"},
+      {role:"me",   vn:"Tôi tên là Nomura, đến từ Nhật Bản.", kana:"トイ テン ラー ノムラ、デン トゥ ニャッ バン", ja:"野村と申します。日本から来ました。"},
+      {role:"them", vn:"Rất hân hạnh. Mời anh vào.", kana:"ザッ ハン ハイン。モイ アイン ヴァオ", ja:"光栄です。どうぞお入りください。"},
+      {role:"me",   vn:"Cảm ơn. Đây là danh thiếp của tôi.", kana:"カム オン。ダイ ラー ザイン ティエップ クア トイ", ja:"ありがとう。これは私の名刺です。"},
+      {role:"them", vn:"Cảm ơn anh. Nhà máy rất mong hợp tác.", kana:"カム オン アイン。ニャー マイ ザッ モン ホップ タッ", ja:"ありがとうございます。ぜひ協力したいです。"},
+    ]
+  },
+  {
+    emo:"🍜", title:"昼食・食事の席",
+    desc:"出された料理を食べる場面",
+    lines:[
+      {role:"them", vn:"Mời anh dùng bữa. Món này là đặc sản.", kana:"モイ アイン ズン ブア。モン ナイ ラー ダッ サン", ja:"どうぞ召し上がれ。これは名物料理です。"},
+      {role:"me",   vn:"Đây là món gì vậy?", kana:"ダイ ラー モン ジー ヴァイ", ja:"これは何の料理ですか？"},
+      {role:"them", vn:"Đây là cá kho. Có cay một chút.", kana:"ダイ ラー カー コー。コー カイ モッ チュッ", ja:"魚の煮込みです。少し辛いですよ。"},
+      {role:"me",   vn:"Tôi không ăn được rau mùi, được không?", kana:"トイ コン アン ドゥオッ ザウ ムイ、ドゥオッ コン", ja:"パクチーが苦手なのですが、大丈夫ですか？"},
+      {role:"them", vn:"Được, tôi sẽ bảo nhà bếp.", kana:"ドゥオッ、トイ セー バオ ニャー ベップ", ja:"大丈夫です、厨房に伝えますね。"},
+      {role:"me",   vn:"Cảm ơn. Rất ngon!", kana:"カム オン。ザッ ンゴン！", ja:"ありがとう。とても美味しいです！"},
+    ]
+  },
+  {
+    emo:"🍻", title:"懇親会・乾杯",
+    desc:"夕食会でお酒をすすめられる場面",
+    lines:[
+      {role:"them", vn:"Nào, chúng ta cùng nâng ly!", kana:"ナオ、チュン タ クン ナン リー", ja:"さあ、一緒に乾杯しましょう！"},
+      {role:"me",   vn:"Một hai ba, dô! Chúc sức khỏe!", kana:"モッ ハイ バー、ヨー！チュッ スッ クェ", ja:"乾杯！健康に乾杯！"},
+      {role:"them", vn:"Anh uống thêm một ly nữa nhé?", kana:"アイン ウオン テム モッ リー ヌア ニェ", ja:"もう一杯どうですか？"},
+      {role:"me",   vn:"Cảm ơn, tôi uống một chút thôi.", kana:"カム オン、トイ ウオン モッ チュッ トイ", ja:"ありがとう、少しだけにします。"},
+      {role:"them", vn:"Không sao! Vui là chính.", kana:"コン サオ！ヴイ ラー チン", ja:"大丈夫！楽しむのが一番です。"},
+      {role:"me",   vn:"Vui quá! Hẹn gặp lại nhé.", kana:"ヴイ クア！ヘン ガップ ライ ニェ", ja:"とても楽しいです！また会いましょう。"},
+    ]
+  },
+  {
+    emo:"🌊", title:"海洋環境について話す",
+    desc:"Alliance for the Blue の活動を伝える",
+    lines:[
+      {role:"me",   vn:"Chúng tôi hoạt động để bảo vệ biển.", kana:"チュン トイ ホアッ ドン デ バオ ヴェ ビエン", ja:"私たちは海を守るために活動しています。"},
+      {role:"them", vn:"Thật tuyệt vời. Rất ý nghĩa.", kana:"タッ トゥエッ ヴオイ。ザッ イー ンギア", ja:"素晴らしいですね。とても意義があります。"},
+      {role:"me",   vn:"Hãy cùng nhau giảm rác nhựa nhé.", kana:"ハイ クン ニャウ ザム ザッ ニュア ニェ", ja:"一緒にプラスチックごみを減らしましょう。"},
+      {role:"them", vn:"Đồng ý! Nhà máy sẽ hợp tác.", kana:"ドン イー！ニャー マイ セー ホップ タッ", ja:"賛成です！工場も協力します。"},
+      {role:"me",   vn:"Cảm ơn sự hợp tác của các bạn.", kana:"カム オン ス ホップ タッ クア カッ バン", ja:"皆さんのご協力に感謝します。"},
+    ]
+  },
+];
+
+/* =========================================================
+   発音再生
+   ① まずオンラインTTS(Google)で“本物のベトナム語音声”を再生
+   ② 失敗時のみ端末の音声合成にフォールバック
+   ========================================================= */
+let viVoice=null, jaVoice=null, curAudio=null;
+function loadVoices(){
+  if(!('speechSynthesis' in window)) return;
+  const vs=speechSynthesis.getVoices();
+  viVoice=vs.find(v=>/vi[-_]/i.test(v.lang)||/vietnam/i.test(v.name))||null;
+  jaVoice=vs.find(v=>/ja[-_]/i.test(v.lang))||null;
+}
+if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+
+function stopAll(){
+  if(curAudio){ try{curAudio.pause();}catch(e){} curAudio=null; }
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+function fallbackSpeak(text, lang){
+  if(!('speechSynthesis' in window)) return;
+  const u=new SpeechSynthesisUtterance(text);
+  if(lang==="vi"){ u.lang="vi-VN"; if(viVoice)u.voice=viVoice; u.rate=.85; }
+  else{ u.lang="ja-JP"; if(jaVoice)u.voice=jaVoice; u.rate=.95; }
+  speechSynthesis.speak(u);
+}
+
+// lang: "vi" or "ja"
+function speak(text, lang, btn){
+  stopAll();
+  if(btn) btn.classList.add('loading');
+  const tl = lang==="vi" ? "vi" : "ja";
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&q=${encodeURIComponent(text)}`;
+  let done=false;
+  try{
+    const audio=new Audio();
+    curAudio=audio;
+    audio.src=url;
+    audio.onplaying=()=>{ done=true; if(btn) btn.classList.remove('loading'); };
+    audio.onended=()=>{ if(btn) btn.classList.remove('loading'); };
+    audio.onerror=()=>{ if(!done){ if(btn) btn.classList.remove('loading'); fallbackSpeak(text,lang);} };
+    const p=audio.play();
+    if(p && p.catch){ p.catch(()=>{ if(!done){ if(btn) btn.classList.remove('loading'); fallbackSpeak(text,lang);} }); }
+    // 念のためのタイムアウト保険
+    setTimeout(()=>{ if(!done){ if(btn) btn.classList.remove('loading'); fallbackSpeak(text,lang);} }, 2500);
+  }catch(e){
+    if(btn) btn.classList.remove('loading');
+    fallbackSpeak(text,lang);
+  }
+}
+
+/* =========================================================
+   フレーズ集
+   ========================================================= */
+let activeCat="すべて";
+const chipsEl=document.getElementById('chips');
+const listEl=document.getElementById('phraseList');
+const searchEl=document.getElementById('search');
+
+CATS.forEach(c=>{
+  const b=document.createElement('button');
+  b.textContent=c; if(c===activeCat)b.classList.add('active');
+  b.onclick=()=>{activeCat=c; [...chipsEl.children].forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderPhrases();};
+  chipsEl.appendChild(b);
+});
+
+function renderPhrases(){
+  const q=searchEl.value.trim().toLowerCase();
+  let data=PHRASES.filter(p=>{
+    const okCat=activeCat==="すべて"||p.cat===activeCat;
+    const okQ=!q||p.ja.toLowerCase().includes(q)||p.vn.toLowerCase().includes(q)||p.kana.includes(q);
+    return okCat&&okQ;
+  });
+  listEl.innerHTML="";
+  if(!data.length){ listEl.innerHTML='<p style="color:var(--sub);text-align:center;margin-top:30px">該当するフレーズがありません。</p>'; return; }
+  let lastCat=null;
+  data.forEach(p=>{
+    if(activeCat==="すべて" && p.cat!==lastCat){
+      const lab=document.createElement('div'); lab.className='cat-label';
+      lab.textContent="● "+p.cat; listEl.appendChild(lab); lastCat=p.cat;
+    }
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div class="txt">
+        <div class="ja">${p.ja}</div>
+        <div class="vn">${p.vn}</div>
+        <div class="kana">🔊 ${p.kana}</div>
+      </div>
+      <button class="play" aria-label="再生">▶</button>`;
+    const btn=card.querySelector('.play');
+    const go=(e)=>{ if(e) e.stopPropagation(); speak(p.vn,"vi",btn); };
+    btn.onclick=go; card.onclick=go;
+    listEl.appendChild(card);
+  });
+}
+searchEl.addEventListener('input', renderPhrases);
+renderPhrases();
+
+/* =========================================================
+   ロールプレイ
+   ========================================================= */
+const rpSelect=document.getElementById('rpSelect');
+const rpPlay=document.getElementById('rpPlay');
+
+SCENES.forEach((s,i)=>{
+  const el=document.createElement('div'); el.className='rp-scene';
+  el.innerHTML=`<div class="emo">${s.emo}</div><div><h3>${s.title}</h3><p>${s.desc}</p></div>`;
+  el.onclick=()=>openScene(i);
+  rpSelect.appendChild(el);
+});
+
+function openScene(i){
+  const s=SCENES[i];
+  rpSelect.style.display="none"; rpPlay.style.display="block";
+  let html=`<button class="rp-back" id="rpBack">← シナリオ一覧へ</button>
+    <h2 style="font-size:17px;margin:4px 2px 14px">${s.emo} ${s.title}</h2>
+    <div style="background:#eef5f8;border-radius:10px;padding:8px 12px;font-size:12px;color:var(--blue);margin-bottom:14px">
+      🔵 = あなた（代表）　／　⚪ = ベトナムの方。吹き出しをタップで発音再生。
+    </div>`;
+  s.lines.forEach(l=>{
+    const me=l.role==="me";
+    html+=`<div class="bubble ${l.role} clearfix">
+      <div class="role">${me?"🔵 あなた":"⚪ ベトナムの方"}</div>
+      <div class="box" data-vn="${encodeURIComponent(l.vn)}">
+        <div class="vn2">${l.vn}</div>
+        <div class="kana2">${l.kana}</div>
+        <div class="ja2">${l.ja}</div>
+        <button class="mini">🔊 発音</button>
+      </div>
+    </div>`;
+  });
+  rpPlay.innerHTML=html;
+  document.getElementById('rpBack').onclick=()=>{rpPlay.style.display="none";rpSelect.style.display="grid";};
+  rpPlay.querySelectorAll('.box').forEach(box=>{
+    const vn=decodeURIComponent(box.dataset.vn);
+    const fire=(e)=>{e.stopPropagation();speak(vn,"vi");};
+    box.onclick=fire;
+    box.querySelector('.mini').onclick=fire;
+  });
+}
+
+/* =========================================================
+   翻訳
+   ========================================================= */
+let dir="ja2vi";
+const langFrom=document.getElementById('langFrom');
+const langTo=document.getElementById('langTo');
+const trInput=document.getElementById('trInput');
+const trOut=document.getElementById('trOut');
+const swapBtn=document.getElementById('swapBtn');
+const micBtn=document.getElementById('micBtn');
+const goBtn=document.getElementById('goBtn');
+
+function refreshDir(){
+  if(dir==="ja2vi"){langFrom.textContent="日本語";langTo.textContent="ベトナム語";}
+  else{langFrom.textContent="ベトナム語";langTo.textContent="日本語";}
+}
+swapBtn.onclick=()=>{dir=(dir==="ja2vi")?"vi2ja":"ja2vi"; refreshDir(); trInput.value=""; trOut.innerHTML='<span class="hint">翻訳結果がここに表示されます。</span>';};
+refreshDir();
+
+async function translate(){
+  const text=trInput.value.trim();
+  if(!text){ trOut.innerHTML='<span class="hint">テキストを入力してください。</span>'; return; }
+  const pair=dir==="ja2vi"?"ja|vi":"vi|ja";
+  const outLang=dir==="ja2vi"?"vi":"ja";
+  trOut.innerHTML='<span class="hint">翻訳中… ⏳</span>';
+  try{
+    const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${pair}`;
+    const r=await fetch(url);
+    const j=await r.json();
+    let out=(j&&j.responseData&&j.responseData.translatedText)?j.responseData.translatedText:"";
+    if(!out) throw new Error("empty");
+    out=out.replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/&amp;/g,'&');
+    const cls=outLang==="vi"?"res resvn":"res";
+    trOut.innerHTML=`<div class="${cls}" id="resText">${out}</div>
+      <div class="outbtns">
+        <button id="speakRes">🔊 発音を聞く</button>
+        <button id="copyRes">📋 コピー</button>
+      </div>`;
+    document.getElementById('speakRes').onclick=()=>speak(out,outLang);
+    document.getElementById('copyRes').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(out);};
+    speak(out,outLang);
+  }catch(e){
+    trOut.innerHTML='<span class="hint">⚠️ 翻訳に失敗しました。通信環境をご確認のうえ、もう一度お試しください。</span>';
+  }
+}
+goBtn.onclick=translate;
+
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recog=null, recording=false;
+if(SR){
+  recog=new SR();
+  recog.continuous=false; recog.interimResults=false;
+  recog.onresult=(e)=>{ trInput.value=e.results[0][0].transcript; stopRec(); translate(); };
+  recog.onerror=()=>stopRec();
+  recog.onend=()=>stopRec();
+}
+function startRec(){
+  if(!recog){ alert("お使いのブラウザは音声入力に対応していません。Chrome などでお試しください。"); return; }
+  recog.lang=dir==="ja2vi"?"ja-JP":"vi-VN";
+  try{ recog.start(); recording=true; micBtn.classList.add('rec'); micBtn.textContent="● 録音中…停止"; }catch(e){}
+}
+function stopRec(){ recording=false; micBtn.classList.remove('rec'); micBtn.textContent="🎤 音声入力"; try{recog&&recog.stop();}catch(e){} }
+micBtn.onclick=()=>{ recording?stopRec():startRec(); };
+
+/* =========================================================
+   タブ切り替え
+   ========================================================= */
+document.querySelectorAll('.tabbar button').forEach(btn=>{
+  btn.onclick=()=>{
+    stopAll();
+    document.querySelectorAll('.tabbar button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-'+btn.dataset.page).classList.add('active');
+    window.scrollTo(0,0);
+  };
+});
+</script>
+</body>
+</html>
