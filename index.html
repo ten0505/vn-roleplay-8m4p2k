@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="referrer" content="no-referrer">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>ベトナム会話アプリ｜Alliance for the Blue</title>
 <style>
@@ -306,18 +307,24 @@ function speak(text, lang, btn){
   if(btn) btn.classList.add('loading');
   const tl = lang==="vi" ? "vi" : "ja";
   const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&q=${encodeURIComponent(text)}`;
-  let done=false;
+  let done=false, failed=false;
+  const fail=()=>{ if(done||failed) return; failed=true; if(btn) btn.classList.remove('loading'); fallbackSpeak(text,lang); };
   try{
     const audio=new Audio();
     curAudio=audio;
+    // Refererを送らない（github.io等のRefererが付くとGoogle TTSが404を返すため）
+    audio.referrerPolicy="no-referrer";
+    audio.crossOrigin=null;
+    audio.preload="auto";
     audio.src=url;
     audio.onplaying=()=>{ done=true; if(btn) btn.classList.remove('loading'); };
+    audio.oncanplay=()=>{ done=true; };
     audio.onended=()=>{ if(btn) btn.classList.remove('loading'); };
-    audio.onerror=()=>{ if(!done){ if(btn) btn.classList.remove('loading'); fallbackSpeak(text,lang);} };
+    audio.onerror=fail;
     const p=audio.play();
-    if(p && p.catch){ p.catch(()=>{ if(!done){ if(btn) btn.classList.remove('loading'); fallbackSpeak(text,lang);} }); }
-    // 念のためのタイムアウト保険
-    setTimeout(()=>{ if(!done){ if(btn) btn.classList.remove('loading'); fallbackSpeak(text,lang);} }, 2500);
+    if(p && p.catch){ p.catch(()=>fail()); }
+    // ネットが遅い端末でも誤フォールバックしないよう長めの保険
+    setTimeout(()=>fail(), 5000);
   }catch(e){
     if(btn) btn.classList.remove('loading');
     fallbackSpeak(text,lang);
